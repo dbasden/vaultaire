@@ -1,0 +1,9 @@
+Test code to read the output of pmacct's "formatted" data, and put
+it into frames
+
+If you have tests/c compiled:
+
+	./collect_test_flows.sh  | ./pmacct2vault | ../c/unpack_frames
+
+will run pmacct, generate vault frames from the output, and
+then show what is inside the frames
