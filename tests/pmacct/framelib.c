@@ -85,7 +85,7 @@ size_t write_frame(FILE *fp, DataFrame *frame) {
 }
 
 /**
- * output an integer frame including a frame length header
+ * output a frame including a frame length header
  *
  * return bytes written to the output stream if transmitted successfully
  * otherwise returns 0
@@ -93,19 +93,36 @@ size_t write_frame(FILE *fp, DataFrame *frame) {
  * Note: It is possible that even if the frame is not written successfully to the
  * stream that the header will have written.
  */
-size_t emit_uint64(FILE *stream, uint64_t timestamp, char *source, uint64_t value) {
-	DataFrame frame;
+size_t emit_frame(FILE *stream, DataFrame *framep) {
 	size_t written_head;
 	size_t written_frame;
 
-	data_frame_init_numeric(&frame, source, timestamp, value);
-
-	written_head = write_frame_length(stream, &frame);
+	written_head = write_frame_length(stream, framep);
 	if (! written_head) 
 		return 0;
 
-	written_frame = write_frame(stream,&frame);
+	written_frame = write_frame(stream,framep);
 
 	return written_frame ? written_head + written_frame : 0;
 }
 
+/*
+ * Wrapper functions to init and emit frames
+ */
+size_t emit_uint64(FILE *stream, uint64_t timestamp, char *source, uint64_t value) {
+	DataFrame frame;
+	data_frame_init_numeric(&frame, source, timestamp, value);
+	return emit_frame(stream, &frame);
+}
+
+size_t emit_real(FILE *stream, uint64_t timestamp, char *source, double value) {
+	DataFrame frame;
+	data_frame_init_real(&frame, source, timestamp, value);
+	return emit_frame(stream, &frame);
+}
+
+size_t emit_text(FILE *stream, uint64_t timestamp, char *source, char * value) {
+	DataFrame frame;
+	data_frame_init_text(&frame, source, timestamp, value);
+	return emit_frame(stream, &frame);
+}

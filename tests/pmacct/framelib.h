@@ -4,9 +4,9 @@
 
 #include "DataFrame.pb-c.h"
 
-/** init a data frame with specific values
- * the frame copies the pointer to source, not the string itself.
- * caller is responsible for copying first if they need
+/*
+ * helpers to init data frames for various types
+ * for any char * arguments, the function copies the pointer, not the underlying data.
  */
 void data_frame_init_numeric(DataFrame *frame,
 		char *source, uint64_t timestamp, uint64_t value_numeric);
@@ -23,17 +23,30 @@ void data_frame_init_text(DataFrame *frame,
  * return bytes written to stream iff transmitted successfully
  * or 0 on error
  */
-int write_frame(FILE *fp, DataFrame *frame);
+size_t write_frame(FILE *fp, DataFrame *frame);
 
 /**
- * build and output a frame to a stream, preceeded by a length prelude
+ * output a frame including a frame length header
  *
- * The length prelude is a network byte ordered uint32 that contains the
- * amount of bytes to read for the successive frame
+ * return bytes written to the output stream if transmitted successfully
+ * otherwise returns 0
  *
- * return bytes written to stream iff transmitted successfully
- * or 0 on error
+ * Note: It is possible that even if the frame is not written successfully to the
+ * stream that the header will have written.
  */
-int emit_uint64(FILE *stream, uint64_t timestamp, char *source, uint64_t value);
+size_t emit_frame(FILE *stream, DataFrame *framep);
+
+/*
+ * Wrapper functions to init then emit frames
+ * 
+ * return bytes written to the output stream if transmitted successfully
+ * otherwise returns 0
+ *
+ * Note: It is possible that even if the frame is not written successfully to the
+ * stream that the header will have written.
+ */
+size_t emit_uint64(FILE *stream, uint64_t timestamp, char *source, uint64_t value);
+size_t emit_real(FILE *stream, uint64_t timestamp, char *source, double value);
+size_t emit_text(FILE *stream, uint64_t timestamp, char *source, char * value);
 
 #endif
