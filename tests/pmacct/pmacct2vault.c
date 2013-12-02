@@ -63,6 +63,7 @@ int main(int argc, char **argv) {
 	char *source_ip;
 	char *dest_ip;
 	uint64_t bytes;
+	uint64_t timestamp;
 
 	infile = stdin; /* slack */
 	outfile = stdout; /* slack */
@@ -74,21 +75,36 @@ int main(int argc, char **argv) {
 		 */
 		if (buf[0] < '0' || buf[0] > '9')  continue;
 
+		/* Keep timestamp the same for all items based on the same entry
+		 * in case we need to cross correlate them later
+		 */
+		timestamp = timestamp_now();
+
 		buf[BUFSIZ-1] = 0;
-		if (! parse_pmacct_record(buf, &source_ip, &dest_ip, &bytes)) {
-			continue; // Doesn't look like it's actually a record
-		}
+		if (! parse_pmacct_record(buf, &source_ip, &dest_ip, &bytes))
+			continue; /* Doesn't look like it's actually a record */
 
 		/* emit a frame for both parties */
 		if ( snprintf(buf, BUFSIZ, "ip_capture:traffic:%s:tx_bytes", source_ip) <10 ) {
 			perror("snprintf"); return 2; }
-		if (! emit_uint64(outfile, timestamp_now(), buf, bytes)) { 
+		if (! emit_uint64(outfile, timestamp, buf, bytes)) {
 			perror("emit_uint64"); return 1; }
 
 		if ( snprintf(buf, BUFSIZ, "ip_capture:traffic:%s:rx_bytes", dest_ip) < 10)  {
 			perror("snprintf"); return 3; }
-		if (! emit_uint64(outfile, timestamp_now(), buf, bytes)) { 
+		if (! emit_uint64(outfile, timestamp, buf, bytes)) {
 			perror("emit_uint64"); return 1; }
+
+		/* and who they were talking to */
+		if ( snprintf(buf, BUFSIZ, "ip_capture:traffic:%s:dest_ip", source_ip) <10 ) {
+			perror("snprintf"); return 2; }
+		if (! emit_text(outfile, timestamp, buf, dest_ip)) {
+			perror("emit_text"); return 1; }
+		if ( snprintf(buf, BUFSIZ, "ip_capture:traffic:%s:src_ip", dest_ip) <10 ) {
+			perror("snprintf"); return 2; }
+		if (! emit_text(outfile, timestamp, buf, source_ip)) {
+			perror("emit_text"); return 1; }
+
 
 		free(source_ip);
 		free(dest_ip);
