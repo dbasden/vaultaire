@@ -64,6 +64,8 @@ int main(int argc, char **argv) {
 	char *dest_ip;
 	uint64_t bytes;
 	uint64_t timestamp;
+	uint64_t last_timestamp;
+	last_timestamp = timestamp_now();
 
 	infile = stdin; /* slack */
 	outfile = stdout; /* slack */
@@ -79,6 +81,17 @@ int main(int argc, char **argv) {
 		 * in case we need to cross correlate them later
 		 */
 		timestamp = timestamp_now();
+
+		/* the 2tuple of source,timestamp must be unique for each frame
+		 *
+		 * Check to make sure that if we have a really course clock that we
+		 * are still maintaining that invariant
+		 */
+		if (timestamp < last_timestamp)
+			timestamp = last_timestamp + 1;   /* Great. NTP skew. My lucky day */
+		if (timestamp == last_timestamp)
+			timestamp++;
+		last_timestamp = timestamp;
 
 		buf[BUFSIZ-1] = 0;
 		if (! parse_pmacct_record(buf, &source_ip, &dest_ip, &bytes))
