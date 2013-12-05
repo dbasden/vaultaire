@@ -1,0 +1,9 @@
+Proof-of-concept IP usage tracker
+
+Takes IP usage frames and aggregates them in a way that might be more
+useful to an end user than hundreds of millions of individual datapoints
+
+inputs are frames with dummy sources of the formats:
+
+	ip_capture:traffic:10.0.0.10:tx_bytes
+	ip_capture:traffic:10.0.0.10:rx_bytes
