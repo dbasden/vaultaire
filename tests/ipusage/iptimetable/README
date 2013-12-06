@@ -1,0 +1,33 @@
+A C implementation that trades memory usage for speed
+
+The implementation is equivalent to a 2 dimensional table, with rows
+being IPv4 addresses[0] and columns being bytes for a time range.
+
+There is a column for every 10 minute period across a year.
+
+for 8192 IP addresses, with every entry being a uint64_t, this is
+only 3.2GB per table, making it practical to keep this entirely
+in memory.  
+
+All of the data being in memory makes operating on the data very
+fast.  The most common case of summing together periods of time
+for a summary (e.g. usage by hour for a day, or usage by day for
+a month) involves sequential reads in memory and accumulation,
+which makes efficient use of CPU cache prefetching and pipelining.
+
+Summing together data for common queries takes microseconds, negating
+the need to cache query responses, or pre-collate the data past the
+initial binning into 10 minute periods per IP address.
+
+Caveats:
+
+ * Although reading from the data is cheap, loading in the data may
+   not be, even if the table is pre-built from a year of data.
+
+ * Memory usage is proportional to address space tracked, although 
+   a row could as easily contain data for an address block as
+   it could an IPv4 address as per [0].
+
+[0] There is no need to have them be IPv4 addresses. They could as
+    easily be aggregated by anything else, such as IPv4 prefix, IPv6
+    prefix, customer, web server colour etc.
