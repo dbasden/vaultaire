@@ -17,7 +17,7 @@
 
 #define IP_ROW(_IP)		((_IP) * YEAR)
 #define JULIANCOL(_JULIAN)	(_JULIAN)
-#define TIMESTAMPCOL(_TIMESTAMP)	(((_TIMESTAMP)-START_OF_YEAR)/10)
+#define TIMESTAMPCOL(_TIMESTAMP)	(((_TIMESTAMP)-START_OF_YEAR)/)
 
 #define IP_WITHIN_BOUNDS(_IP)	((_IP) >= 0 && (_IP) < IPSPACE)
 #define TIMESTAMP_WITHIN_BOUNDS(_TS)	(((_TS) >= START_OF_YEAR) && (_TS) < (START_OF_YEAR + (10 * YEAR)))
@@ -44,9 +44,9 @@ int main() {
 
 	printf("Attempting to malloc %llu bytes\n", YEAR * IPSPACE * sizeof(uint64_t));
 
-	iptimetable = malloc(YEAR * IPSPACE * sizeof( uint64_t));
+	iptimetable = calloc(1, IPTIMETABLESIZE * sizeof(uint64_t));
 	if (iptimetable == NULL) {
-		perror("malloc()");
+		perror("calloc()");
 		return 1;
 	}
 
